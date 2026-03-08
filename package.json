@@ -1,0 +1,17 @@
+{
+  "name": "finance-auto-gen-docs",
+  "version": "1.0.0",
+  "description": "AI 驱动的全球市场早晚报",
+  "main": "index.js",
+  "scripts": {
+    "docs:dev": "vitepress dev",
+    "docs:build": "vitepress build",
+    "docs:preview": "vitepress preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "vitepress": "^1.0.0"
+  }
+}
