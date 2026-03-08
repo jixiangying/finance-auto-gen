@@ -16,6 +16,7 @@ const getReports = () => {
 }
 
 export default defineConfig({
+  base: '/finance-auto-gen/',
   title: "全天候金融洞察",
   description: "AI 驱动的全球市场早晚报",
   themeConfig: {
