@@ -19,7 +19,7 @@
 
 ## 2. 宏观展望与数据看板
 
-![Domestic Outlook Chart](..images/charts/domestic_outlook.png)
+![Domestic Outlook Chart](../images/charts/domestic_outlook.png)
 
 *   **明日核心数据 (3月9日)**：国家统计局将发布 2 月通胀数据。市场普遍预期 **CPI 将回升至 0.4%-0.5%**，这被视为消费复苏的重要先行指标。
 *   **周二流动性窗口 (3月10日)**：将公布 2 月金融数据（社融、信贷）。在央行适度宽松表态下，市场对信贷结构的改善抱有期待。
