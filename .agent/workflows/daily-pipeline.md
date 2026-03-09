@@ -3,6 +3,8 @@ name: daily-pipeline
 description: 自动执行每日市场报告全流程：调研、撰写、推送到 GitHub。
 ---
 
+// turbo-all
+
 # 每日报告自动化流水线
 
 这个工作流将按顺序调用三个 Agent 技能，完成从获取数据到发布网页的全过程。
