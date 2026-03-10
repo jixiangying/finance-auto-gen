@@ -6,3 +6,4 @@ node_modules/
 # Automation scripts and guides
 AUTOMATION_GUIDE.md
 scripts/
+!scripts/*.py
