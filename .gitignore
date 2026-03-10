@@ -5,5 +5,10 @@ node_modules/
 
 # Automation scripts and guides
 AUTOMATION_GUIDE.md
-scripts/
-!scripts/*.py
+
+# PROTECT SENSITIVE FILES
+scripts/*.plist
+scripts/*.scpt
+scripts/*.sh
+scripts/trigger_pipeline.scpt
+scripts/com.jxy.finance.autogen.plist
