@@ -7,6 +7,7 @@ node_modules/
 AUTOMATION_GUIDE.md
 
 # PROTECT SENSITIVE FILES
+.env
 scripts/*.plist
 scripts/*.scpt
 scripts/*.sh
