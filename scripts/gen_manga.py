@@ -11,23 +11,21 @@ def generate_image(prompt, style, output_path):
     encoded_prompt = urllib.parse.quote(full_prompt)
     seed = random.randint(1, 1000000)
     
-    # Define primary and backup endpoints with different logic
-    # 1. Hercai (Stable backup)
-    # 2. Pollinations (Currently down but normally good)
-    
+    # Define reliable endpoints
     endpoints = [
-        # Hercai API (Alternative free provider)
+        # 1. Airforce API (Very fast and stable currently)
         {
-            "url": f"https://hercai.onrender.com/v3/text2image?prompt={encoded_prompt}",
-            "type": "json_url" # Returns a JSON with a URL
+            "url": f"https://api.airforce/v1/desktop/generation?prompt={encoded_prompt}&model=flux&width=1024&height=1024&seed={seed}",
+            "type": "direct"
         },
-        # Pollinations (Original)
+        # 2. Pollinations Flux Model
         {
             "url": f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1024&height=1024&seed={seed}&nologo=true&model=flux",
-            "type": "direct" # Returns image bytes directly
+            "type": "direct"
         },
+        # 3. Pollinations Turbo
         {
-            "url": f"https://pollinations.ai/p/{encoded_prompt}?width=1024&height=1024&seed={seed}",
+            "url": f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1024&height=1024&seed={seed}&nologo=true&model=turbo",
             "type": "direct"
         }
     ]
@@ -38,33 +36,21 @@ def generate_image(prompt, style, output_path):
         
         for attempt in range(2):
             try:
-                r = requests.get(url, timeout=60)
+                # Use a generous timeout for image generation
+                r = requests.get(url, timeout=45)
                 if r.status_code == 200:
-                    if ep["type"] == "direct":
-                        if 'image' in r.headers.get('content-type', ''):
-                            os.makedirs(os.path.dirname(output_path), exist_ok=True)
-                            with open(output_path, 'wb') as f:
-                                f.write(r.content)
-                            print(f"Success! Image saved via direct download.")
-                            return True
-                    elif ep["type"] == "json_url":
-                        data = r.json()
-                        img_url = data.get("url")
-                        if img_url:
-                            img_r = requests.get(img_url, timeout=60)
-                            if img_r.status_code == 200:
-                                os.makedirs(os.path.dirname(output_path), exist_ok=True)
-                                with open(output_path, 'wb') as f:
-                                    f.write(img_r.content)
-                                print(f"Success! Image saved via JSON URL.")
-                                return True
-                elif r.status_code == 429:
-                    time.sleep(5)
-                else:
-                    print(f"HTTP Error {r.status_code}")
-                    break
+                    # Check if we got an image or at least a decent amount of data
+                    content_type = r.headers.get('content-type', '')
+                    if 'image' in content_type or len(r.content) > 10000:
+                        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+                        with open(output_path, 'wb') as f:
+                            f.write(r.content)
+                        print(f"Success! Image saved from {url}")
+                        return True
+                print(f"Attempt {attempt+1} failed with status {r.status_code}")
+                time.sleep(2)
             except Exception as e:
-                print(f"Error: {str(e)}")
+                print(f"Error on attempt {attempt+1}: {str(e)}")
                 time.sleep(2)
     
     return False
