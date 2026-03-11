@@ -1,52 +1,49 @@
 import matplotlib.pyplot as plt
-import matplotlib.font_manager as fm
+import matplotlib.patches as patches
+from PIL import Image, ImageDraw, ImageFont
 import os
 
-# Set font for Chinese characters (macOS)
-font_path = '/System/Library/Fonts/STHeiti Medium.ttc'
-if not os.path.exists(font_path):
-    font_path = '/System/Library/Fonts/PingFang.ttc'
-
-prop = fm.FontProperties(fname=font_path)
+# Set font for macOS
+plt.rcParams['font.sans-serif'] = ['Arial Unicode MS'] # Common on macOS
 plt.rcParams['axes.unicode_minus'] = False
 
-# Market Data
+def create_card(name, value, change_pct, filename):
+    color = '#e74c3c' if change_pct >= 0 else '#2ecc71' # Red for up, Green for down (standard in some contexts, but skill says Red up 🔴, Green down 🟢)
+    # Re-reading skill: "红色代表上涨 🔴，绿色代表下跌 🟢" -> Red for up, Green for down.
+    
+    fig, ax = plt.subplots(figsize=(4, 2))
+    fig.patch.set_facecolor('#f8f9fa')
+    ax.set_facecolor('#f8f9fa')
+    
+    # Draw background
+    ax.add_patch(patches.Rectangle((0, 0), 1, 1, transform=ax.transAxes, color='#ffffff', ec='#dee2e6', lw=2))
+    
+    # Text
+    plt.text(0.1, 0.7, name, fontsize=16, fontweight='bold', transform=ax.transAxes)
+    plt.text(0.1, 0.4, f"{value}", fontsize=24, fontweight='bold', color='#2c3e50', transform=ax.transAxes)
+    
+    prefix = "+" if change_pct >= 0 else ""
+    plt.text(0.1, 0.15, f"{prefix}{change_pct:.2f}%", fontsize=18, fontweight='bold', color=color, transform=ax.transAxes)
+    
+    plt.axis('off')
+    plt.tight_layout()
+    
+    output_path = f"images/charts/{filename}"
+    plt.savefig(output_path, dpi=100, bbox_inches='tight', facecolor='#f8f9fa')
+    plt.close()
+    print(f"Saved {output_path}")
+
+# Ensure directory exists
+os.makedirs('images/charts', exist_ok=True)
+
 data = [
-    {"name": "S&P 500", "price": "6,781.48", "change": "-0.21%"},
-    {"name": "Nasdaq", "price": "22,697.10", "change": "+0.01%"},
-    {"name": "Dow Jones", "price": "47,706.51", "change": "-0.07%"},
-    {"name": "Gold", "price": "$5,190.72", "change": "+1.00%"},
-    {"name": "WTI Oil", "price": "$86.39", "change": "-8.81%"},
-    {"name": "Bitcoin", "price": "$70,305", "change": "+1.72%"}
+    ("S&P 500", "6,781.48", -0.21, "sp500_card.png"),
+    ("Nasdaq", "22,697.10", 0.01, "nasdaq_card.png"),
+    ("Dow Jones", "47,706.51", -0.07, "dow_card.png"),
+    ("Gold", "$5,231.79", 1.9, "gold_card.png"),
+    ("Oil (WTI)", "$83.45", -10.0, "oil_card.png"),
+    ("Bitcoin", "$70,665", 2.1, "btc_card.png")
 ]
 
-# Plotting
-fig, axes = plt.subplots(2, 3, figsize=(15, 8), facecolor='#f4f4f4')
-fig.suptitle('国际市场行情快报 (2026-03-11 上午)', fontproperties=prop, fontsize=20, fontweight='bold', y=1.05)
-
-for i, ax in enumerate(axes.flat):
-    if i < len(data):
-        item = data[i]
-        is_up = '+' in item['change']
-        color = '#e74c3c' if is_up else '#27ae60'  # Red for up, Green for down as per instructions
-        
-        ax.set_facecolor('white')
-        ax.text(0.5, 0.7, item['name'], fontproperties=prop, fontsize=16, ha='center', va='center', fontweight='bold')
-        ax.text(0.5, 0.4, item['price'], fontsize=24, ha='center', va='center', color='#333')
-        ax.text(0.5, 0.15, item['change'], fontsize=20, ha='center', va='center', color=color, fontweight='bold')
-        
-        # Add a border
-        for spine in ax.spines.values():
-            spine.set_edgecolor('#ddd')
-            spine.set_linewidth(2)
-        
-        ax.set_xticks([])
-        ax.set_yticks([])
-    else:
-        ax.axis('off')
-
-plt.tight_layout()
-output_path = 'images/charts/2026-03-11-morning-chart.png'
-os.makedirs(os.path.dirname(output_path), exist_ok=True)
-plt.savefig(output_path, bbox_inches='tight', dpi=150)
-print(f"Chart saved to {output_path}")
+for item in data:
+    create_card(*item)
