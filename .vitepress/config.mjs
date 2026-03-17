@@ -2,38 +2,91 @@ import { defineConfig } from 'vitepress'
 import fs from 'fs'
 import path from 'path'
 
-// Helper to get all reports with advanced sorting
-const getReports = () => {
+// Helper to get week range (Monday to Sunday) and a sortable timestamp
+const getWeekInfo = (dateStr) => {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  const date = new Date(year, month - 1, day)
+  const dayOfWeek = date.getDay() || 7 // 1 (Mon) to 7 (Sun)
+  
+  const monday = new Date(date)
+  monday.setDate(date.getDate() - dayOfWeek + 1)
+  
+  const sunday = new Date(monday)
+  sunday.setDate(monday.getDate() + 6)
+  
+  const format = (d) => `${d.getMonth() + 1}.${d.getDate()}`
+  return {
+    range: `${format(monday)} - ${format(sunday)}`,
+    mondayTime: monday.getTime()
+  }
+}
+
+// Helper to get all reports grouped by Year and Week Range
+const getGroupedReports = () => {
   const reportsDir = path.resolve(__dirname, '../reports')
   if (!fs.existsSync(reportsDir)) return []
-  return fs.readdirSync(reportsDir)
+  
+  const files = fs.readdirSync(reportsDir)
     .filter(file => file.endsWith('.md') && file !== 'index.md')
-    .map(file => ({
-      text: file.replace('.md', ''),
-      link: `/reports/${file.replace('.md', '')}`,
-      name: file.replace('.md', '')
-    }))
-    .sort((a, b) => {
-      // Comparison logic: 
-      // 1. Date (YYYY-MM-DD) descending
-      // 2. Evening always above Morning for the same date
-      if (a.name < b.name) return 1
-      if (a.name > b.name) return -1
-      return 0
+    .map(file => {
+      const name = file.replace('.md', '')
+      const dateStr = name.substring(0, 10)
+      const { range, mondayTime } = getWeekInfo(dateStr)
+      return {
+        text: name.includes('morning') ? `${dateStr} 上午` : (name.includes('evening') ? `${dateStr} 下午` : name),
+        link: `/reports/${name}`,
+        name: name,
+        year: dateStr.substring(0, 4),
+        weekRange: range,
+        mondayTime: mondayTime
+      }
     })
-    // Note: Since 'evening' starts with 'e' and 'morning' with 'm', 
-    // alphabetical DESC ('m' to 'a') would put morning first.
-    // However, filenames are YYYY-MM-DD-evening/morning.
-    // '2026-03-09-morning' vs '2026-03-09-evening': 
-    // 'm' > 'e'. In DESC sort, 'morning' comes first.
-    // We actually need a custom rule: if date is same, 'evening' > 'morning'.
     .sort((a, b) => {
-       const dateA = a.name.substring(0, 10);
-       const dateB = b.name.substring(0, 10);
-       if (dateA !== dateB) return dateB.localeCompare(dateA);
-       // Same date: force 'evening' to be "smaller" in index (top)
-       return a.name.includes('evening') ? -1 : 1;
+      if (a.name.substring(0, 10) !== b.name.substring(0, 10)) {
+        return b.name.localeCompare(a.name)
+      }
+      return a.name.includes('evening') ? -1 : 1
     })
+
+  const groups = []
+  const yearMap = new Map()
+
+  files.forEach(report => {
+    if (!yearMap.has(report.year)) {
+      const yearGroup = {
+        text: `${report.year}年`,
+        collapsed: false,
+        items: []
+      }
+      yearMap.set(report.year, yearGroup)
+      groups.push(yearGroup)
+    }
+
+    const yearGroup = yearMap.get(report.year)
+    let weekGroup = yearGroup.items.find(i => i.text === report.weekRange)
+    
+    if (!weekGroup) {
+      weekGroup = {
+        text: report.weekRange,
+        mondayTime: report.mondayTime,
+        collapsed: true,
+        items: []
+      }
+      yearGroup.items.push(weekGroup)
+    }
+    
+    weekGroup.items.push({
+      text: report.text,
+      link: report.link
+    })
+  })
+
+  // Sort weeks within years (descending by Monday's timestamp)
+  groups.forEach(yearGroup => {
+    yearGroup.items.sort((a, b) => b.mondayTime - a.mondayTime)
+  })
+
+  return groups
 }
 
 export default defineConfig({
@@ -52,12 +105,7 @@ export default defineConfig({
       { text: '市场简报', link: '/reports/' }
     ],
     sidebar: {
-      '/reports/': [
-        {
-          text: '历史简报',
-          items: getReports()
-        }
-      ]
+      '/reports/': getGroupedReports()
     },
     socialLinks: [
       { icon: 'github', link: 'https://github.com/vuejs/vitepress' }
