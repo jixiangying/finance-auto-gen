@@ -63,7 +63,9 @@ def generate_with_siliconflow(prompt, output_path):
     return False
 
 def generate_image(prompt, style, output_path):
-    full_prompt = f"{style} style, {prompt}"
+    # Dynamic prompt enrichment to avoid homogenization
+    quality_boosters = "masterpiece, high detail, intricate composition, cinematic lighting, 8k resolution"
+    full_prompt = f"{style} style, {prompt}, {quality_boosters}"
     
     # Tier 1: Pollinations
     pollinations_models = ["flux", "turbo"]
