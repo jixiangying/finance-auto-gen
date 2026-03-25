@@ -10,14 +10,14 @@ if not os.path.exists(font_path):
 prop = fm.FontProperties(fname=font_path)
 plt.rcParams['axes.unicode_minus'] = False
 
-# Data (Domestic Close for Wednesday, March 25, 2026)
+# Data (Domestic Close for Wednesday, March 25, 2026) - CORRECTED
 data = [
     {"name": "上证指数", "price": "3,931.84", "change": "+1.30%"},
     {"name": "深证成指", "price": "13,801.00", "change": "+1.95%"},
-    {"name": "创业板指", "price": "3,292.47", "change": "+1.26%"},
-    {"name": "沪深300", "price": "4,514.00", "change": "+0.88%"},
-    {"name": "恒生指数", "price": "25,301.00", "change": "+0.95%"},
-    {"name": "恒生科技", "price": "4,927.51", "change": "+2.00%"}
+    {"name": "创业板指", "price": "3,316.97", "change": "+2.01%"},
+    {"name": "沪深300", "price": "4,537.36", "change": "+1.40%"},
+    {"name": "恒生指数", "price": "25,335.95", "change": "+1.09%"},
+    {"name": "恒生科技", "price": "4,922.94", "change": "+1.91%"}
 ]
 
 # Plotting
