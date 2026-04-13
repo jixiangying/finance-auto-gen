@@ -9,11 +9,11 @@ plt.rcParams['font.family'] = prop.get_name()
 plt.rcParams['axes.unicode_minus'] = False
 
 # 数据
-labels = ['S&P 500', 'Dow Jones', 'Nasdaq', 'Bitcoin', 'Brent Oil']
-prices = ['6816.89', '47916.57', '22902.89', '70662', '90.00']
-changes = [-0.11, -0.56, 0.35, -2.28, -1.10] # 假设油价从近期高位回落
+labels = ['上证指数', '沪深300', '恒生指数', '布伦特原油', '比特币']
+prices = ['3989.00', '4631.00', '25587.26', '107.28', '73500']
+changes = [0.07, -0.12, -1.2, 8.5, 2.5]
 
-# 颜色：红涨绿跌 (A股习惯，虽然这是国际市场调研，但脚本要求红涨绿跌)
+# 颜色：红涨绿跌
 colors = ['#ff4d4f' if c > 0 else '#52c41a' for c in changes]
 change_texts = [f'{"+" if c > 0 else ""}{c}%' for c in changes]
 
@@ -32,9 +32,9 @@ for i, bar in enumerate(bars):
             ha='center', va='bottom', fontsize=12, fontweight='bold', color=colors[i])
 
 # 设置样式
-ax.set_title('全球核心资产表现 (2026-04-13 Morning)', fontproperties=prop, fontsize=16, pad=20)
+ax.set_title('今日市场核心指标收盘表现 (2026-04-13 Evening)', fontproperties=prop, fontsize=16, pad=20)
 ax.set_ylabel('涨跌幅绝对值 (%)', fontproperties=prop, fontsize=12)
-ax.set_ylim(0, max([abs(c) for c in changes]) + 1)
+ax.set_ylim(0, max([abs(c) for c in changes]) + 2)
 ax.set_xticklabels(labels, fontproperties=prop, fontsize=12)
 
 # 移除边框
@@ -45,6 +45,6 @@ ax.spines['right'].set_visible(False)
 output_dir = 'images/charts'
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
-output_path = os.path.join(output_dir, '2026-04-13-morning-chart.png')
+output_path = os.path.join(output_dir, '2026-04-13-evening.png')
 plt.savefig(output_path, dpi=300, bbox_inches='tight')
 print(f"Chart saved to {output_path}")
