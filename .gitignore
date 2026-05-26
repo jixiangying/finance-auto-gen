@@ -2,6 +2,7 @@ node_modules/
 .vitepress/cache/
 .vitepress/dist/
 .DS_Store
+*.log
 
 # Automation scripts and guides
 AUTOMATION_GUIDE.md
