@@ -14,3 +14,7 @@ scripts/*.scpt
 scripts/*.sh
 scripts/trigger_pipeline.scpt
 scripts/com.jxy.finance.autogen.plist
+
+# Cache directories
+cache/
+
