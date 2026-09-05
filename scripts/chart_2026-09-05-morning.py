@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-2026-09-05 国际市场早报 行情数据卡片生成脚本
-复盘日期：2026-09-04（周五）美国市场收盘数据
+数据信息卡片生成脚本 - 2026-09-05 早报（国际市场）
+复盘日期：2026-09-04（周五）美股收盘
 """
+
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -10,79 +12,124 @@ import matplotlib.patches as mpatches
 from matplotlib.font_manager import FontProperties
 import os
 
-# ── 字体设置（macOS 中文支持）──────────────────────────────────────────
-font_path = '/System/Library/Fonts/STHeiti Medium.ttc'
-if os.path.exists(font_path):
-    prop = FontProperties(fname=font_path)
-    prop_bold = FontProperties(fname=font_path, weight='bold')
-else:
+# ── 中文字体 (macOS) ──────────────────────────────────────────
+FONT_PATHS = [
+    "/System/Library/Fonts/STHeiti Medium.ttc",
+    "/System/Library/Fonts/Supplemental/Songti.ttc",
+    "/Library/Fonts/Arial Unicode MS.ttf",
+]
+prop = None
+for fp in FONT_PATHS:
+    if os.path.exists(fp):
+        prop = FontProperties(fname=fp)
+        break
+if prop is None:
     prop = FontProperties()
-    prop_bold = FontProperties(weight='bold')
 
 plt.rcParams['axes.unicode_minus'] = False
 
-# ── 行情数据（2026-09-04 收盘）────────────────────────────────────────
-assets = [
-    {"name": "道琼斯",      "value": "53,414",  "change": "-0.51%", "up": False},
-    {"name": "标普500",     "value": "7,718.60", "change": "-0.38%", "up": False},
-    {"name": "纳斯达克",    "value": "26,506.99","change": "-0.29%", "up": False},
-    {"name": "美债10Y",     "value": "4.78%",    "change": "+0.05%", "up": True},
-    {"name": "美元指数DXY", "value": "99.14",    "change": "+0.22%", "up": True},
-    {"name": "黄金",        "value": "$4,437.60","change": "-1.12%", "up": False},
-    {"name": "WTI原油",     "value": "$91.48",   "change": "-0.17%", "up": False},
-    {"name": "比特币BTC",   "value": "$79,200",  "change": "-2.21%", "up": False},
+# ── 市场数据 ──────────────────────────────────────────────────
+data = [
+    # (标签,         现值字符串,    涨跌%,     涨跌方向 True=涨)
+    ("道琼斯",      "53,414.25",  "-0.51%",   False),
+    ("标普500",     "7,718.60",   "-0.38%",   False),
+    ("纳斯达克",    "26,506.99",  "-0.29%",   False),
+    ("10Y美债",     "4.780%",     "+0.02 pct",True),
+    ("黄金(oz)",    "$4,420",     "-1.51%",   False),
+    ("WTI原油",     "$91.30",     "-0.37%",   False),
+    ("比特币",      "$79,220",    "-2.20%",   False),
 ]
 
-# ── 绘图配置 ──────────────────────────────────────────────────────────
-n = len(assets)
-fig, axes = plt.subplots(2, 4, figsize=(16, 6))
-fig.patch.set_facecolor('#0d1117')
-fig.suptitle(
-    '2026-09-04  国际市场收盘行情',
-    fontsize=15, color='white', fontproperties=prop_bold, y=1.02
-)
+UP_COLOR   = "#E74C3C"
+DOWN_COLOR = "#27AE60"
+BG_COLOR   = "#0D1117"
+CARD_COLOR = "#161B22"
 
-for i, (ax, asset) in enumerate(zip(axes.flat, assets)):
-    up = asset["up"]
-    card_color = '#1a1a2e'
-    accent = '#ff4d4d' if up else '#00c853'   # 红涨绿跌
-    arrow = '▲' if up else '▼'
+n = len(data)
+fig_w, fig_h = 10, 7
+fig, ax = plt.subplots(figsize=(fig_w, fig_h))
+ax.set_facecolor(BG_COLOR)
+fig.patch.set_facecolor(BG_COLOR)
+ax.axis('off')
 
-    ax.set_facecolor(card_color)
-    for spine in ax.spines.values():
-        spine.set_edgecolor(accent)
-        spine.set_linewidth(1.5)
+ax.text(0.5, 0.97,
+        "2026-09-05 早报  |  国际市场收盘行情",
+        transform=ax.transAxes,
+        ha='center', va='top',
+        fontsize=14, color='white',
+        fontproperties=prop,
+        fontweight='bold')
 
-    ax.set_xticks([])
-    ax.set_yticks([])
+ax.text(0.5, 0.91,
+        "复盘日期：2026-09-04（周五）NYSE/NASDAQ 收盘",
+        transform=ax.transAxes,
+        ha='center', va='top',
+        fontsize=9, color='#8B949E',
+        fontproperties=prop)
 
-    # 资产名称
-    ax.text(0.5, 0.80, asset["name"],
+cols = 4
+card_w = 0.21
+card_h = 0.25
+x_start = 0.03
+y_start = 0.82
+x_gap = 0.24
+y_gap = 0.30
+
+for i, (label, price, pct, is_up) in enumerate(data):
+    col = i % cols
+    row = i // cols
+    x = x_start + col * x_gap
+    y = y_start - row * y_gap
+
+    color = UP_COLOR if is_up else DOWN_COLOR
+
+    rect = mpatches.FancyBboxPatch(
+        (x, y - card_h), card_w, card_h,
+        boxstyle="round,pad=0.01",
+        linewidth=1.5,
+        edgecolor=color,
+        facecolor=CARD_COLOR,
+        transform=ax.transAxes,
+        clip_on=False
+    )
+    ax.add_patch(rect)
+
+    ax.text(x + card_w / 2, y - 0.03,
+            label,
             transform=ax.transAxes,
-            ha='center', va='center',
-            fontsize=13, color='#cccccc',
+            ha='center', va='top',
+            fontsize=10, color='#8B949E',
             fontproperties=prop)
 
-    # 价格
-    ax.text(0.5, 0.50, asset["value"],
+    ax.text(x + card_w / 2, y - 0.11,
+            price,
             transform=ax.transAxes,
-            ha='center', va='center',
-            fontsize=17, color='white',
-            fontproperties=prop_bold)
+            ha='center', va='top',
+            fontsize=12, color='white',
+            fontproperties=prop,
+            fontweight='bold')
 
-    # 涨跌幅
-    ax.text(0.5, 0.18, f'{arrow} {asset["change"]}',
+    ax.text(x + card_w / 2, y - 0.19,
+            pct,
             transform=ax.transAxes,
-            ha='center', va='center',
-            fontsize=13, color=accent,
-            fontproperties=prop_bold)
+            ha='center', va='top',
+            fontsize=10, color=color,
+            fontproperties=prop)
 
-plt.tight_layout(pad=1.5)
+ax.text(0.5, 0.03,
+        "Data: NYSE/NASDAQ Official Close | For reference only",
+        transform=ax.transAxes,
+        ha='center', va='bottom',
+        fontsize=7, color='#484F58',
+        fontproperties=prop)
 
-# ── 保存 ──────────────────────────────────────────────────────────────
-out_dir = os.path.join(os.path.dirname(__file__), '..', 'images', 'charts')
+out_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'images', 'charts')
+out_dir = os.path.normpath(out_dir)
 os.makedirs(out_dir, exist_ok=True)
 out_path = os.path.join(out_dir, '2026-09-05-morning-chart.png')
+
+plt.tight_layout(pad=0)
 plt.savefig(out_path, dpi=150, bbox_inches='tight',
-            facecolor=fig.get_facecolor())
-print(f'✅ 数据卡片已保存：{out_path}')
+            facecolor=BG_COLOR, edgecolor='none')
+plt.close()
+print(f"Chart saved: {out_path}")
