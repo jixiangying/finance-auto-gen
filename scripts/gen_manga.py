@@ -28,8 +28,8 @@ def generate_with_siliconflow(prompt, output_path):
         "Content-Type": "application/json"
     }
     
-    # Try two models on SiliconFlow
-    models = ["Kwai-Kolors/Kolors", "black-forest-labs/FLUX.1-schnell"]
+    # SiliconFlow 仅使用免费模型（FLUX.1-schnell 已下架；Z-Image / Qwen-Image 为付费模型）
+    models = ["Kwai-Kolors/Kolors"]
     
     for model in models:
         payload = {
@@ -92,25 +92,6 @@ def generate_image(prompt, style, output_path):
     # Tier 2: SiliconFlow (Stable Key-based Backup)
     if generate_with_siliconflow(full_prompt, output_path):
         return True
-
-    # Tier 3: Hercai
-    encoded_prompt = urllib.parse.quote(full_prompt)
-    hercai_url = f"https://hercai.onrender.com/v3/text2image?prompt={encoded_prompt}"
-    print(f"Trying Hercai fallback...")
-    try:
-        r = requests.get(hercai_url, timeout=60)
-        if r.status_code == 200:
-            data = r.json()
-            img_url = data.get("url")
-            if img_url:
-                img_r = requests.get(img_url, timeout=60)
-                if img_r.status_code == 200 and is_valid_image(img_r.content):
-                    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-                    with open(output_path, 'wb') as f:
-                        f.write(img_r.content)
-                    print("Success! Image generated via Hercai.")
-                    return True
-    except: pass
 
     # Last resort: Try a very short prompt if long one caused timeouts
     if len(prompt) > 20:

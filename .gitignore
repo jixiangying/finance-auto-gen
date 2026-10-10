@@ -18,3 +18,7 @@ scripts/com.jxy.finance.autogen.plist
 # Cache directories
 cache/
 
+
+# Python 编译缓存
+__pycache__/
+*.pyc
