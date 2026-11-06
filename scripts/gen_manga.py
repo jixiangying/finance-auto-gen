@@ -4,10 +4,39 @@ import requests
 import random
 import time
 import urllib.parse
+import io
 from dotenv import load_dotenv
 
 # Load environment variables from .env
 load_dotenv()
+
+def save_compressed_image(content, output_path, max_dim=800):
+    """Compress oversized PNG/image outputs using Pillow while keeping genuine format & filename."""
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    try:
+        from PIL import Image
+        with Image.open(io.BytesIO(content)) as img:
+            orig_kb = len(content) / 1024.0
+            img = img.convert("RGB")
+            if max(img.size) > max_dim:
+                img.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
+            buf = io.BytesIO()
+            if output_path.lower().endswith(".jpg") or output_path.lower().endswith(".jpeg"):
+                img.save(buf, format="JPEG", quality=82, optimize=True)
+            else:
+                # Save as compact 256-color indexed PNG (~300-400 KB instead of 2.5 MB)
+                q_img = img.quantize(colors=256, method=Image.Quantize.MEDIANCUT)
+                q_img.save(buf, format="PNG", optimize=True)
+            compressed = buf.getvalue()
+            if len(compressed) < len(content) and is_valid_image(compressed):
+                with open(output_path, "wb") as f:
+                    f.write(compressed)
+                print(f"Compressed image: {orig_kb:.1f} KB -> {len(compressed)/1024.0:.1f} KB")
+                return
+    except Exception as e:
+        print(f"Warning: Pillow compression skipped ({e}), writing raw image.")
+    with open(output_path, "wb") as f:
+        f.write(content)
 
 def is_valid_image(content):
     if len(content) < 5000: return False
@@ -50,9 +79,7 @@ def generate_with_siliconflow(prompt, output_path):
                     print(f"Downloading from SiliconFlow source: {img_url}")
                     img_r = requests.get(img_url, timeout=120)
                     if img_r.status_code == 200 and is_valid_image(img_r.content):
-                        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-                        with open(output_path, 'wb') as f:
-                            f.write(img_r.content)
+                        save_compressed_image(img_r.content, output_path)
                         print(f"Success! Image generated via SiliconFlow ({model}).")
                         return True
             else:
@@ -78,9 +105,7 @@ def generate_image(prompt, style, output_path):
             try:
                 r = requests.get(url, timeout=60)
                 if r.status_code == 200 and is_valid_image(r.content):
-                    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-                    with open(output_path, 'wb') as f:
-                        f.write(r.content)
+                    save_compressed_image(r.content, output_path)
                     print(f"Success! Image generated via Pollinations ({model}).")
                     return True
                 elif r.status_code == 429:
