@@ -39,13 +39,41 @@ jobs:
   deploy:
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deploy_1.outputs.page_url || steps.deploy_2.outputs.page_url || steps.deploy_3.outputs.page_url }}
     needs: build
     runs-on: ubuntu-latest
     name: Deploy
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
+      - name: Deploy to GitHub Pages (Attempt 1)
+        id: deploy_1
+        continue-on-error: true
         uses: actions/deploy-pages@v4
         with:
-          timeout: 1200000
+          timeout: 240000
+
+      - name: Cooldown 45s before Retry 2
+        if: steps.deploy_1.outcome == 'failure'
+        run: |
+          echo "Attempt 1 timed out or failed (common during 00:00-00:20 UTC peak). Waiting 45s before Retry 2..."
+          sleep 45
+
+      - name: Deploy to GitHub Pages (Attempt 2)
+        id: deploy_2
+        if: steps.deploy_1.outcome == 'failure'
+        continue-on-error: true
+        uses: actions/deploy-pages@v4
+        with:
+          timeout: 300000
+
+      - name: Cooldown 60s before Retry 3
+        if: steps.deploy_1.outcome == 'failure' && steps.deploy_2.outcome == 'failure'
+        run: |
+          echo "Attempt 2 also failed. Waiting 60s before final Retry 3..."
+          sleep 60
+
+      - name: Deploy to GitHub Pages (Attempt 3 - Final)
+        id: deploy_3
+        if: steps.deploy_1.outcome == 'failure' && steps.deploy_2.outcome == 'failure'
+        uses: actions/deploy-pages@v4
+        with:
+          timeout: 600000
